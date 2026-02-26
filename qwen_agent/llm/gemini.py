@@ -240,7 +240,7 @@ class GeminiChatAtVertexAI(BaseFnCallModel):
     ) -> List[Message]:
         try:
             contents = self.convert_messages_to_dicts(messages)
-            print('\n[Gemini Raw Prompt / contents]\n' + self._debug_dump_contents(contents))
+            # print('\n[Gemini Raw Prompt / contents]\n' + self._debug_dump_contents(contents))
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=contents,

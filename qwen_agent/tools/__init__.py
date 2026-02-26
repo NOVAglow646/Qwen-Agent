@@ -21,6 +21,8 @@ from .image_gen import ImageGen
 from .python_executor import PythonExecutor
 from .retrieval import Retrieval
 from .image_zoom_in_qwen3vl import ImageZoomInToolQwen3VL
+from .image_draw_lines import ImageDrawLinesTool
+from .image_draw_bboxes import ImageDrawBBoxesTool
 from .image_search import ImageSearch
 from .search_tools import FrontPageSearch, HybridSearch, KeywordSearch, VectorSearch
 from .simple_doc_parser import SimpleDocParser
@@ -40,6 +42,8 @@ __all__ = [
     'Storage',
     'Retrieval',
     'ImageZoomInToolQwen3VL',
+    'ImageDrawLinesTool',
+    'ImageDrawBBoxesTool',
     'ImageSearch',
     'WebExtractor',
     'SimpleDocParser',
