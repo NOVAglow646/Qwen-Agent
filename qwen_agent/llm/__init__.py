@@ -17,6 +17,7 @@ from typing import Union
 
 from .azure import TextChatAtAzure
 from .base import LLM_REGISTRY, BaseChatModel, ModelServiceError
+from .gemini import GeminiChatAtVertexAI
 from .oai import TextChatAtOAI
 from .openvino import OpenVINO
 from .qwen_dashscope import QwenChatAtDS
@@ -82,6 +83,11 @@ def get_chat_model(cfg: Union[dict, str] = 'qwen-plus') -> BaseChatModel:
 
     model = cfg.get('model', '')
 
+    if 'gemini' in model.lower():
+        model_type = 'gemini'
+        cfg['model_type'] = model_type
+        return LLM_REGISTRY[model_type](cfg)
+
     if '-vl' in model.lower():
         model_type = 'qwenvl_dashscope'
         cfg['model_type'] = model_type
@@ -112,6 +118,7 @@ __all__ = [
     'QwenOmniChatAtOAI',
     'OpenVINO',
     'Transformers',
+    'GeminiChatAtVertexAI',
     'get_chat_model',
     'ModelServiceError',
 ]
