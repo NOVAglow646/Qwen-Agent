@@ -17,6 +17,7 @@ import copy
 import json
 import mimetypes
 import os
+from pprint import pformat
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional
 
@@ -199,6 +200,26 @@ class GeminiChatAtVertexAI(BaseFnCallModel):
                     texts.append(text)
         return ''.join(texts)
 
+    @staticmethod
+    def _debug_dump_contents(contents: List) -> str:
+        debug_items = []
+        for part in contents:
+            text = getattr(part, 'text', None)
+            if text:
+                debug_items.append({'type': 'text', 'text': text})
+                continue
+
+            inline_data = getattr(part, 'inline_data', None)
+            if inline_data is not None:
+                mime_type = getattr(inline_data, 'mime_type', '')
+                data = getattr(inline_data, 'data', b'')
+                byte_length = len(data) if data else 0
+                debug_items.append({'type': 'inline_data', 'mime_type': mime_type, 'bytes': byte_length})
+                continue
+
+            debug_items.append({'type': 'unknown', 'repr': str(part)})
+        return pformat(debug_items, width=120)
+
     def _chat_stream(
         self,
         messages: List[Message],
@@ -218,9 +239,11 @@ class GeminiChatAtVertexAI(BaseFnCallModel):
         generate_cfg: dict,
     ) -> List[Message]:
         try:
+            contents = self.convert_messages_to_dicts(messages)
+            print('\n[Gemini Raw Prompt / contents]\n' + self._debug_dump_contents(contents))
             response = self.client.models.generate_content(
                 model=self.model,
-                contents=self.convert_messages_to_dicts(messages),
+                contents=contents,
                 config=self._build_generate_config(generate_cfg),
             )
             text = self._extract_text(response)
