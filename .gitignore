@@ -33,6 +33,7 @@ build/*
 dist/*
 
 examples/*.ipynb
+examples/scripts/logs/*
 **/workspace/*
 test/*
 tests/env.sh
