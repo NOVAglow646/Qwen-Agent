@@ -8,13 +8,14 @@ conda activate qwen_agent
 # conda activate qwen35_vllm
 
 # ===== Config (can be overridden by environment variables) =====
-MODEL_PATH="/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3-VL-235B-A22B-Instruct"
+MODEL_PATH="Qwen/Qwen3-VL-235B-A22B-Instruct"
 SERVED_MODEL_NAME="Qwen3-VL-235B-A22B-Instruct"
 PORT="${PORT:-8000}"
 TP_SIZE="${TP_SIZE:-8}"
 GPU_IDS="${GPU_IDS:-0,1,2,3,4,5,6,7}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-32768}"
 GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.92}"
+ENGINE_STARTUP_TIMEOUT="${ENGINE_STARTUP_TIMEOUT:-1800}"
 
 # ===== Environment =====
 export CUDA_VISIBLE_DEVICES="${GPU_IDS}"
@@ -26,16 +27,25 @@ LOG_DIR="examples/scripts/logs"
 mkdir -p "${LOG_DIR}"
 VLLM_LOG="${LOG_DIR}/vllm_qwen3_vl_twi_$(date +%Y%m%d_%H%M%S).log"
 
+# ===== Build compatibility args =====
+EXTRA_ARGS=()
+if vllm serve --help 2>&1 | grep -q -- "--engine-startup-timeout-seconds"; then
+  EXTRA_ARGS+=("--engine-startup-timeout-seconds" "${ENGINE_STARTUP_TIMEOUT}")
+elif vllm serve --help 2>&1 | grep -q -- "--engine-startup-timeout"; then
+  EXTRA_ARGS+=("--engine-startup-timeout" "${ENGINE_STARTUP_TIMEOUT}")
+fi
+
 # ===== Start vLLM (background) =====
-python -m vllm.entrypoints.openai.api_server \
-  --model "${MODEL_PATH}" \
+vllm serve "${MODEL_PATH}" \
   --served-model-name "${SERVED_MODEL_NAME}" \
   --host 0.0.0.0 \
   --port "${PORT}" \
   --tensor-parallel-size "${TP_SIZE}" \
+  --limit-mm-per-prompt.video 0 \
+  --async-scheduling \
   --gpu-memory-utilization "${GPU_MEM_UTIL}" \
   --max-model-len "${MAX_MODEL_LEN}" \
-  --trust-remote-code >"${VLLM_LOG}" 2>&1 &
+  "${EXTRA_ARGS[@]}" >"${VLLM_LOG}" 2>&1 &
 
 VLLM_PID=$!
 echo "[INFO] vLLM started, pid=${VLLM_PID}, log=${VLLM_LOG}"
