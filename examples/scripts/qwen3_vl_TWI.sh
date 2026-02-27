@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-conda activate qwen35_vllm
+# Optional: set and activate your conda env before running this script.
+# source ~/miniconda3/etc/profile.d/conda.sh
+# conda activate qwen35_vllm
 
-# ===== Config =====
-MODEL_PATH="/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3.5-397B-A17B"
-SERVED_MODEL_NAME="Qwen3.5-397B-A17B"
-PORT="8000"
-TP_SIZE="8"
-GPU_IDS="0,1,2,3,4,5,6,7"
-MAX_MODEL_LEN="32768"
-GPU_MEM_UTIL="0.92"
+# ===== Config (can be overridden by environment variables) =====
+MODEL_PATH="/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3-VL-235B-A22B-Instruct"
+SERVED_MODEL_NAME="Qwen3-VL-235B-A22B-Instruct"
+PORT="${PORT:-8000}"
+TP_SIZE="${TP_SIZE:-8}"
+GPU_IDS="${GPU_IDS:-0,1,2,3,4,5,6,7}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-32768}"
+GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.92}"
 
 # ===== Environment =====
 export CUDA_VISIBLE_DEVICES="${GPU_IDS}"
@@ -20,7 +22,7 @@ export LOCAL_MODEL_NAME="${SERVED_MODEL_NAME}"
 
 LOG_DIR="examples/scripts/logs"
 mkdir -p "${LOG_DIR}"
-VLLM_LOG="${LOG_DIR}/vllm_qwen3_5_twi_$(date +%Y%m%d_%H%M%S).log"
+VLLM_LOG="${LOG_DIR}/vllm_qwen3_vl_twi_$(date +%Y%m%d_%H%M%S).log"
 
 # ===== Start vLLM (background) =====
 python -m vllm.entrypoints.openai.api_server \
@@ -78,5 +80,5 @@ done
 
 echo "[INFO] vLLM is ready at ${LOCAL_OAI_BASE_URL}"
 
-# ===== Run TWI demo =====
-python examples/assistant_qwen3_5_TWI_local.py
+# ===== Run Qwen3-VL TWI demo =====
+python examples/assistant_qwen3vl_TWI_local.py

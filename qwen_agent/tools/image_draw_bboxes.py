@@ -26,7 +26,7 @@ from qwen_agent.tools.base import BaseToolWithFileAccess, register_tool
 from qwen_agent.utils.utils import extract_images_from_messages
 
 
-@register_tool('image_draw_bboxes')
+@register_tool('image_draw_bboxes_tool')
 class ImageDrawBBoxesTool(BaseToolWithFileAccess):
     description = 'Draw a bounding box on an image using two corner points.'
     parameters = {
