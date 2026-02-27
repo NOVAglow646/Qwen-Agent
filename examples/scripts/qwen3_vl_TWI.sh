@@ -13,8 +13,9 @@ PORT="${PORT:-8000}"
 TP_SIZE="${TP_SIZE:-8}"
 GPU_IDS="${GPU_IDS:-0,1,2,3,4,5,6,7}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
-GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.92}"
+GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.8}"
 ENGINE_STARTUP_TIMEOUT="${ENGINE_STARTUP_TIMEOUT:-1800}"
+ENFORCE_EAGER="${ENFORCE_EAGER:-1}"
 
 # ===== Environment =====
 export CUDA_VISIBLE_DEVICES="${GPU_IDS}"
@@ -33,6 +34,10 @@ if vllm serve --help 2>&1 | grep -q -- "--engine-startup-timeout-seconds"; then
   EXTRA_ARGS+=("--engine-startup-timeout-seconds" "${ENGINE_STARTUP_TIMEOUT}")
 elif vllm serve --help 2>&1 | grep -q -- "--engine-startup-timeout"; then
   EXTRA_ARGS+=("--engine-startup-timeout" "${ENGINE_STARTUP_TIMEOUT}")
+fi
+
+if [ "${ENFORCE_EAGER}" = "1" ] && vllm serve --help 2>&1 | grep -q -- "--enforce-eager"; then
+  EXTRA_ARGS+=("--enforce-eager")
 fi
 
 # ===== Start vLLM (background) =====
