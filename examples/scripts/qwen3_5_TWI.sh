@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ===== Config =====
-MODEL_PATH="Qwen/Qwen3.5-397B-A17B-FP8"
+MODEL_PATH="/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3.5-397B-A17B-FP8"
 SERVED_MODEL_NAME="Qwen3.5-397B-A17B-FP8"
 PORT="8000"
 TP_SIZE="8"

@@ -7,7 +7,7 @@ set -euo pipefail
 # conda activate qwen35_vllm
 
 # ===== Config (can be overridden by environment variables) =====
-MODEL_PATH="Qwen/Qwen3-VL-235B-A22B-Instruct"
+MODEL_PATH="/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3-VL-235B-A22B-Instruct"
 SERVED_MODEL_NAME="Qwen3-VL-235B-A22B-Instruct"
 PORT="${PORT:-8000}"
 TP_SIZE="${TP_SIZE:-8}"
