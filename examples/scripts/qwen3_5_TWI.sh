@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-conda activate qwen35_vllm
-
 # ===== Config =====
 MODEL_PATH="Qwen/Qwen3.5-397B-A17B-FP8"
 SERVED_MODEL_NAME="Qwen3.5-397B-A17B-FP8"
