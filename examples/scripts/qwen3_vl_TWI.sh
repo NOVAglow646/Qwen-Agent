@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+conda activate qwen_agent
+
 # Optional: set and activate your conda env before running this script.
 # source ~/miniconda3/etc/profile.d/conda.sh
 # conda activate qwen35_vllm
