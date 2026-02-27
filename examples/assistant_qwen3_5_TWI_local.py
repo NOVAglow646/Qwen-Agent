@@ -22,7 +22,7 @@ from qwen_agent.utils.output_beautify import multimodal_typewriter_print
 def init_agent_service():
     llm_cfg = {
         # Use your own model service compatible with OpenAI API by vLLM/SGLang:
-        'model': '/ytech_m2v5_hdd/workspace/kling_mm/Models/Qwen3.5-397B-A17B',
+        'model': os.getenv('LOCAL_MODEL_NAME', 'Qwen3.5-397B-A17B'),
         'model_type': 'qwenvl_oai',
         'model_server': os.getenv('LOCAL_OAI_BASE_URL', 'http://localhost:8000/v1'),
         'api_key': os.getenv('LOCAL_OAI_API_KEY', 'EMPTY'),
