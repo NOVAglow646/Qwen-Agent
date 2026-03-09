@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import re
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -70,18 +71,35 @@ def _load_parquet(file_path: Path) -> List[dict]:
     return df.to_dict(orient='records')
 
 
-def load_raw_samples(file_path: str) -> List[dict]:
+def _select_samples_by_spec_ids(samples: List[dict], spec_ids: Optional[List[int]] = None) -> List[dict]:
+    if spec_ids is None:
+        return samples
+
+    selected_samples = []
+    for idx in spec_ids:
+        if not isinstance(idx, int):
+            raise TypeError(f'All spec_ids must be int, but got {type(idx).__name__}: {idx}')
+        if idx < 0 or idx >= len(samples):
+            raise IndexError(f'spec_id {idx} out of range for {len(samples)} samples.')
+        selected_samples.append(samples[idx])
+    return selected_samples
+
+
+def load_raw_samples(file_path: str, spec_ids: Optional[List[int]] = None) -> List[dict]:
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f'Data file not found: {file_path}')
 
     suffix = path.suffix.lower()
     if suffix == '.json':
-        return _load_json(path)
+        samples = _load_json(path)
+        return _select_samples_by_spec_ids(samples=samples, spec_ids=spec_ids)
     if suffix == '.jsonl':
-        return _load_jsonl(path)
+        samples = _load_jsonl(path)
+        return _select_samples_by_spec_ids(samples=samples, spec_ids=spec_ids)
     if suffix == '.parquet':
-        return _load_parquet(path)
+        samples = _load_parquet(path)
+        return _select_samples_by_spec_ids(samples=samples, spec_ids=spec_ids)
 
     raise ValueError(f'Unsupported file extension: {suffix}. Only .json/.jsonl/.parquet are supported.')
 
@@ -95,6 +113,38 @@ def default_dataset_processor(samples: List[dict]) -> List[dict]:
     return samples
 
 
+@register_dataset_processor('AdaTool_SFT')
+def process_adatool_sft(samples: List[dict]) -> List[dict]:
+    processed = []
+
+    for sample in samples:
+        data = sample.get('data', sample) if isinstance(sample, dict) else {}
+
+        images = data.get('images', []) if isinstance(data, dict) else []
+        image = images[0] if isinstance(images, list) and images else None
+
+        conversations = data.get('conversations', []) if isinstance(data, dict) else []
+
+        question_raw = ''
+        if isinstance(conversations, list) and len(conversations) > 1 and isinstance(conversations[1], dict):
+            question_raw = str(conversations[1].get('value', ''))
+        question = question_raw.split('\n\nGuidelines:')[0].strip()
+
+        answer_raw = ''
+        if isinstance(conversations, list) and conversations and isinstance(conversations[-1], dict):
+            answer_raw = str(conversations[-1].get('value', ''))
+        match = re.search(r'<answer>(.*?)</answer>', answer_raw, flags=re.DOTALL)
+        answer = match.group(1).strip() if match else ''
+
+        processed.append({
+            'image': image,
+            'question': question,
+            'answer': answer,
+        })
+
+    return processed
+
+
 def process_samples_by_dataset(samples: List[dict], dataset_name: Optional[str] = None) -> List[dict]:
     if not dataset_name:
         return default_dataset_processor(samples)
@@ -103,6 +153,6 @@ def process_samples_by_dataset(samples: List[dict], dataset_name: Optional[str] 
     return processor(samples)
 
 
-def load_samples(file_path: str, dataset_name: Optional[str] = None) -> List[dict]:
-    samples = load_raw_samples(file_path)
+def load_samples(file_path: str, dataset_name: Optional[str] = None, spec_ids: Optional[List[int]] = None) -> List[dict]:
+    samples = load_raw_samples(file_path=file_path, spec_ids=spec_ids)
     return process_samples_by_dataset(samples=samples, dataset_name=dataset_name)

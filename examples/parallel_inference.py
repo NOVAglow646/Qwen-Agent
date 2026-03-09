@@ -15,10 +15,25 @@ import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from qwen_agent.agents import FnCallAgent
 from qwen_agent.utils.data_loader import load_samples
+
+
+def _parse_spec_ids_arg(value: str) -> Optional[List[int]]:
+	if value is None:
+		return None
+
+	value = value.strip()
+	if not value:
+		return None
+
+	parts = [x.strip() for x in value.split(',') if x.strip()]
+	try:
+		return [int(x) for x in parts]
+	except ValueError as ex:
+		raise argparse.ArgumentTypeError('spec_ids must be comma-separated integers, e.g. 0,3,7') from ex
 
 
 def _build_agent(model_backend: str) -> FnCallAgent:
@@ -102,13 +117,16 @@ def run_parallel_inference(
 	model_backend: str,
 	workers: int,
 	output_path: str,
+	spec_ids: Optional[List[int]] = None,
 	max_samples: int = -1,
 ) -> Dict:
-	samples = load_samples(file_path=input_path, dataset_name=dataset_name)
+	samples = load_samples(file_path=input_path, dataset_name=dataset_name, spec_ids=spec_ids)
 	if max_samples and max_samples > 0:
 		samples = samples[:max_samples]
 
 	print(f'Loaded samples: {len(samples)}')
+	if spec_ids is not None:
+		print(f'Specified sample ids: {spec_ids}')
 	print(f'Model backend: {model_backend}')
 	print(f'Workers: {workers}')
 
@@ -150,6 +168,8 @@ def parse_args():
 	parser.add_argument('--dataset_name', type=str, default='generic', help='Dataset name for custom preprocessing')
 	parser.add_argument('--model_backend', type=str, default='qwen3vl', choices=['qwen3vl', 'gemini'])
 	parser.add_argument('--workers', type=int, default=8, help='Sample-level parallel workers')
+	parser.add_argument('--spec_ids', type=_parse_spec_ids_arg, default=None,
+						help='Comma-separated sample indices to run, e.g. 0,5,9')
 	parser.add_argument('--max_samples', type=int, default=-1, help='Only run first N samples, -1 means all')
 	parser.add_argument('--output_path', type=str, default='outputs/parallel_inference_results.json')
 	return parser.parse_args()
@@ -163,6 +183,7 @@ def main():
 		model_backend=args.model_backend,
 		workers=args.workers,
 		output_path=args.output_path,
+		spec_ids=args.spec_ids,
 		max_samples=args.max_samples,
 	)
 
